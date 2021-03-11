@@ -68,8 +68,16 @@ if __name__ == "__main__":
     data_augment = args.data_aug
     if data_augment:
         print('Data augmentation activated!')
+        data_augment_transforms = [
+            transforms.RandomRotation(15),
+            transforms.ColorJitter(contrast=0.25,
+                                   hue=0.25),
+            transforms.RandomHorizontalFlip(p=0.25),
+            transforms.RandomResizedCrop(32, scale=(0.8, 1.0), ratio=(1.0, 1.0))
+        ]
     else:
         print('Data augmentation NOT activated!')
+        data_augment_transforms = []
 
     # set hdf5 path according your hdf5 file location
     hdf5_file = '../data/hdf5/ift725_acdc.hdf5'
@@ -84,15 +92,25 @@ if __name__ == "__main__":
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
+    train_transform = transforms.Compose([
+        base_transform,
+        *data_augment_transforms
+    ])
+
     if args.dataset == 'cifar10':
         # Download the train and test set and apply transform on it
-        train_set = datasets.CIFAR10(root='../data', train=True, download=True, transform=base_transform)
+        train_set = datasets.CIFAR10(root='../data', train=True, download=True, transform=train_transform)
         test_set = datasets.CIFAR10(root='../data', train=False, download=True, transform=base_transform)
 
     elif args.dataset == 'svhn':
         # Download the train and test set and apply transform on it
-        train_set = datasets.SVHN(root='../data', split='train', download=True, transform=base_transform)
+        train_set = datasets.SVHN(root='../data', split='train', download=True, transform=train_transform)
         test_set = datasets.SVHN(root='../data', split='test', download=True, transform=base_transform)
+
+    if val_set:
+        len_val_set = int(len(train_set) * val_set)
+        train_set, val_set = torch.utils.data.random_split(train_set, [len(train_set) - len_val_set, len_val_set])
+        val_set.transform = base_transform
 
     if args.optimizer == 'SGD':
         optimizer_factory = optimizer_setup(torch.optim.SGD, lr=learning_rate, momentum=0.9)
