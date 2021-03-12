@@ -1,0 +1,68 @@
+(ift725) simon@alien:~/tp3/src$ python train.py --model=CnnVanilla --dataset=svhn --num-epochs=20
+Data augmentation NOT activated!
+Using downloaded and verified file: ../data/train_32x32.mat
+Using downloaded and verified file: ../data/test_32x32.mat
+Training CnnVanilla on svhn for 20 epochs
+Epoch: 1 of 20
+100%|█| 3297/3297 [00:25<00:00, 131.73it/s, loss=0.967]
+Validation loss 0.553
+Epoch: 2 of 20
+100%|█| 3297/3297 [00:25<00:00, 129.30it/s, loss=0.482]
+Validation loss 0.431
+Epoch: 3 of 20
+100%|█| 3297/3297 [00:25<00:00, 131.38it/s, loss=0.399]
+Validation loss 0.362
+Epoch: 4 of 20
+100%|█| 3297/3297 [00:25<00:00, 127.37it/s, loss=0.347]
+Validation loss 0.349
+Epoch: 5 of 20
+100%|█| 3297/3297 [00:26<00:00, 123.69it/s, loss=0.314]
+Validation loss 0.321
+Epoch: 6 of 20
+100%|█| 3297/3297 [00:26<00:00, 123.84it/s, loss=0.284]
+Validation loss 0.311
+Epoch: 7 of 20
+100%|█| 3297/3297 [00:26<00:00, 123.19it/s, loss=0.260]
+Validation loss 0.287
+Epoch: 8 of 20
+100%|█| 3297/3297 [00:26<00:00, 124.06it/s, loss=0.240]
+Validation loss 0.286
+Epoch: 9 of 20
+100%|█| 3297/3297 [00:26<00:00, 125.08it/s, loss=0.221]
+Validation loss 0.324
+Epoch: 10 of 20
+100%|█| 3297/3297 [00:26<00:00, 125.00it/s, loss=0.207]
+Validation loss 0.296
+Epoch: 11 of 20
+100%|█| 3297/3297 [00:27<00:00, 122.07it/s, loss=0.189]
+Validation loss 0.305
+Epoch: 12 of 20
+100%|█| 3297/3297 [00:26<00:00, 123.60it/s, loss=0.178]
+Validation loss 0.302
+Epoch: 13 of 20
+100%|█| 3297/3297 [00:26<00:00, 123.46it/s, loss=0.166]
+Validation loss 0.303
+Epoch: 14 of 20
+100%|█| 3297/3297 [00:27<00:00, 121.45it/s, loss=0.151]
+Validation loss 0.308
+Epoch: 15 of 20
+100%|█| 3297/3297 [00:26<00:00, 122.60it/s, loss=0.144]
+Validation loss 0.313
+Epoch: 16 of 20
+100%|█| 3297/3297 [00:26<00:00, 124.30it/s, loss=0.135]
+Validation loss 0.335
+Epoch: 17 of 20
+100%|█| 3297/3297 [00:26<00:00, 122.35it/s, loss=0.127]
+Validation loss 0.341
+Epoch: 18 of 20
+100%|█| 3297/3297 [00:26<00:00, 123.13it/s, loss=0.120]
+Validation loss 0.348
+Epoch: 19 of 20
+100%|█| 3297/3297 [00:26<00:00, 125.41it/s, loss=0.113]
+Validation loss 0.327
+Epoch: 20 of 20
+100%|█| 3297/3297 [00:26<00:00, 124.37it/s, loss=0.107]
+Validation loss 0.374
+Finished training.
+Accuracy (or Dice for UNet) on the test set: 90.658 %
+
