@@ -25,6 +25,8 @@ from models.UNet import UNet
 from models.VggNet import VggNet
 from torchvision import datasets
 
+from copy import copy
+
 
 def argument_parser():
     """
@@ -66,14 +68,15 @@ if __name__ == "__main__":
     val_set = args.validation
     learning_rate = args.lr
     data_augment = args.data_aug
+
     if data_augment:
         print('Data augmentation activated!')
         data_augment_transforms = [
             transforms.RandomRotation(15),
-            transforms.ColorJitter(contrast=0.5,
-                                   hue=0.5),
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomResizedCrop(32, scale=(0.5, 1.0), ratio=(1.0, 1.0))
+            transforms.ColorJitter(contrast=0.1,
+                                   hue=0.1),
+            transforms.RandomHorizontalFlip(p=0.1),
+            transforms.RandomResizedCrop(32, scale=(0.9, 1.0), ratio=(1.0, 1.0))
         ]
     else:
         print('Data augmentation NOT activated!')
@@ -93,7 +96,8 @@ if __name__ == "__main__":
     ])
 
     train_transform = transforms.Compose([
-        base_transform,
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
         *data_augment_transforms
     ])
 
@@ -110,6 +114,7 @@ if __name__ == "__main__":
     if val_set:
         len_val_set = int(len(train_set) * val_set)
         train_set, val_set = torch.utils.data.random_split(train_set, [len(train_set) - len_val_set, len_val_set])
+        val_set.dataset = copy(train_set.dataset)
         val_set.dataset.transform = base_transform
 
     if args.optimizer == 'SGD':
