@@ -70,10 +70,10 @@ if __name__ == "__main__":
         print('Data augmentation activated!')
         data_augment_transforms = [
             transforms.RandomRotation(15),
-            transforms.ColorJitter(contrast=0.25,
-                                   hue=0.25),
-            transforms.RandomHorizontalFlip(p=0.25),
-            transforms.RandomResizedCrop(32, scale=(0.8, 1.0), ratio=(1.0, 1.0))
+            transforms.ColorJitter(contrast=0.5,
+                                   hue=0.5),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomResizedCrop(32, scale=(0.5, 1.0), ratio=(1.0, 1.0))
         ]
     else:
         print('Data augmentation NOT activated!')
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     if val_set:
         len_val_set = int(len(train_set) * val_set)
         train_set, val_set = torch.utils.data.random_split(train_set, [len(train_set) - len_val_set, len_val_set])
-        val_set.transform = base_transform
+        val_set.dataset.transform = base_transform
 
     if args.optimizer == 'SGD':
         optimizer_factory = optimizer_setup(torch.optim.SGD, lr=learning_rate, momentum=0.9)
