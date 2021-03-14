@@ -15,6 +15,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
+from copy import deepcopy
 from CNNTrainTestManager import CNNTrainTestManager, optimizer_setup
 from HDF5Dataset import HDF5Dataset
 from models.AlexNet import AlexNet
@@ -24,6 +25,7 @@ from models.ResNet import ResNet
 from models.UNet import UNet
 from models.VggNet import VggNet
 from torchvision import datasets
+from torch.utils.data import random_split
 
 
 def argument_parser():
@@ -83,16 +85,34 @@ if __name__ == "__main__":
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
+    if data_augment:
+        augment_transforms = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            transforms.RandomRotation(15),
+            transforms.ColorJitter(contrast=0.25, brightness=0.4, saturation=0.25, hue=0.15),
+            transforms.RandomHorizontalFlip(p=0.35),
+            transforms.RandomResizedCrop(32, scale=(0.8, 1.0), ratio=(1.0, 1.0)),
+        ])
+
+    else:
+        augment_transforms = base_transform
 
     if args.dataset == 'cifar10':
         # Download the train and test set and apply transform on it
-        train_set = datasets.CIFAR10(root='../data', train=True, download=True, transform=base_transform)
+        train_set = datasets.CIFAR10(root='../data', train=True, download=True, transform=augment_transforms)
         test_set = datasets.CIFAR10(root='../data', train=False, download=True, transform=base_transform)
 
     elif args.dataset == 'svhn':
         # Download the train and test set and apply transform on it
-        train_set = datasets.SVHN(root='../data', split='train', download=True, transform=base_transform)
+        train_set = datasets.SVHN(root='../data', split='train', download=True, transform=augment_transforms)
         test_set = datasets.SVHN(root='../data', split='test', download=True, transform=base_transform)
+
+    if val_set:
+        length_val_set = int(len(train_set)*val_set)
+        train_set, val_set = torch.utils.data.random_split(train_set, [len(train_set)-length_val_set, length_val_set])
+        val_set.dataset = deepcopy(train_set.dataset)
+        val_set.dataset.transform = base_transform
 
     if args.optimizer == 'SGD':
         optimizer_factory = optimizer_setup(torch.optim.SGD, lr=learning_rate, momentum=0.9)
