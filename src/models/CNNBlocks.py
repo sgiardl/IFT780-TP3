@@ -65,16 +65,15 @@ class DenseBlock(nn.Module):
 
         super(DenseBlock, self).__init__()
 
-        self.bn1, self.conv1, out = self.get_layers(in_channels, growth_rate, stride, kernel_size, padding, bias)
-        self.bn2, self.conv2, out = self.get_layers(out, growth_rate, stride, kernel_size, padding, bias)
-        self.bn3, self.conv3, out = self.get_layers(out, growth_rate, stride, kernel_size, padding, bias)
+        self.bn1, self.conv1, in_channels = self.get_layers(in_channels, growth_rate, stride, kernel_size, padding, bias)
+        self.bn2, self.conv2, in_channels = self.get_layers(in_channels, growth_rate, stride, kernel_size, padding, bias)
+        self.bn3, self.conv3, in_channels = self.get_layers(in_channels, growth_rate, stride, kernel_size, padding, bias)
 
     @staticmethod
     def get_layers(in_channels, growth_rate, stride, kernel_size, padding, bias):
         bn = nn.BatchNorm2d(in_channels)
-        out_channels = in_channels + growth_rate
-        conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
-        return bn, conv, out_channels
+        conv = nn.Conv2d(in_channels, growth_rate, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
+        return bn, conv, in_channels+growth_rate
 
     def forward(self, x):
 
@@ -88,6 +87,8 @@ class DenseBlock(nn.Module):
         output = torch.cat([x, output], 1)
 
         return output
+
+
 
 
 
