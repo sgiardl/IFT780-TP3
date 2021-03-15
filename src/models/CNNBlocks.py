@@ -89,7 +89,20 @@ class DenseBlock(nn.Module):
         return output
 
 
+class BottleNeck(nn.Module):
 
+    def __init__(self, in_channels, out_channels):
+        """
+        Applies a 1x1 convolution to reduce the number of feature maps
+
+        :param in_channels:
+        :param out_channels:
+        """
+        super(BottleNeck, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=(1, 1))
+
+    def forward(self, x):
+        return self.conv(x)
 
 
 
