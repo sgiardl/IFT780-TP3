@@ -61,7 +61,7 @@ class DenseBlock(nn.Module):
     """
     this block is a Dense Block inspired from DenseNets
     """
-    def __init__(self, in_channels, growth_rate=4, stride=(1,), kernel_size=(3,), padding=(0,), bias=False):
+    def __init__(self, in_channels, growth_rate=4, stride=(1,), kernel_size=(3,), padding=(1,), bias=False):
 
         super(DenseBlock, self).__init__()
 
