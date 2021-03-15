@@ -9,8 +9,8 @@ Other: Suggestions are welcome
 """
 
 import torch.nn as nn
-from models.CNNBaseModel import CNNBaseModel
-from models.CNNBlocks import ResidualBlock
+from src.models.CNNBaseModel import CNNBaseModel
+from src.models.CNNBlocks import ResidualBlock, BaseBlock, DenseBlock, BottleNeck
 
 '''
 TODO
@@ -42,8 +42,17 @@ class IFT725Net(CNNBaseModel):
         """
         super(IFT725Net, self).__init__()
 
+        self.model = nn.Sequential(BaseBlock(3, 10),                   # 3 x 32 x 32 -> 10 x 30 x 30
+                                   DenseBlock(10),                     # 10 x 30 x 30 -> 22 x 30 x 30
+                                   ResidualBlock(10+(4*3), 50),        # 22 x 30 x 30 -> 50 x 30 x 30
+                                   BottleNeck(50, 10),                 # 50 x 30 x 30 -> 10 x 30 x 30
+                                   BaseBlock(10, 5, kernel_size=5),    # 10 x 30 x 30 -> 5 x 26 x 26
+                                   BottleNeck(5, 1),                   # 5 x 26 x 26 -> 1 x 26 x 26
+                                   nn.Flatten(),                       # 676
+                                   nn.Linear(676, num_classes))        # 676 -> num_classes
 
-
+    def forward(self, x):
+        return self.model(x)
 '''
 FIN DE VOTRE CODE
 '''
