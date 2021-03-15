@@ -53,3 +53,30 @@ class ConvBatchNormReluBlock(nn.Module):
     def forward(self, x):
         output = self.relu(self.bn(self.conv(x)))
         return output
+
+
+class DenseBlock(nn.Module):
+    def __init__(self, in_channels, out_channels=32, kernel_size=3, stride=1, padding=1):
+        super().__init__()
+        self.relu = nn.ReLU(inplace=True)
+        self.bn1 = nn.BatchNorm2d(num_channels=in_channels)
+        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=out_channels,
+                               kernel_size=kernel_size, stride=stride, padding=padding)
+        self.bn2 = nn.BatchNorm2d(num_channels=in_channels + out_channels)
+        self.conv2 = nn.Conv2d(in_channels=in_channels + out_channels, out_channels=out_channels,
+                               kernel_size=kernel_size, stride=stride, padding=padding)
+        self.bn3 = nn.BatchNorm2d(num_channels=in_channels + 2 * out_channels)
+        self.conv3 = nn.Conv2d(in_channels=in_channels + 2 * out_channels, out_channels=out_channels,
+                               kernel_size=kernel_size, stride=stride, padding=padding)
+
+    def forward(self, x):
+        conv1 = self.conv1(self.relu(self.bn(x)))
+        c1 = torch.cat([conv1, x], 1)
+
+        conv2 = self.conv1(self.relu(self.bn(c1)))
+        c2 = torch.cat([c1, conv2], 1)
+
+        conv3 = self.conv1(self.relu(self.bn(c2)))
+        c3 = torch.cat([c2, conv3], 1)
+
+        return c3
