@@ -26,6 +26,7 @@ from models.VggNet import VggNet
 from torchvision import datasets
 
 from copy import copy
+import numpy as np
 
 
 def argument_parser():
@@ -60,7 +61,6 @@ def argument_parser():
 
 
 if __name__ == "__main__":
-
     args = argument_parser()
 
     batch_size = args.batch_size
@@ -73,10 +73,10 @@ if __name__ == "__main__":
         print('Data augmentation activated!')
         data_augment_transforms = [
             transforms.RandomRotation(15),
-            transforms.ColorJitter(contrast=0.1,
+            transforms.ColorJitter(contrast=0,  # 0.1 for cifar10, 0 for svhn
                                    hue=0.1),
-            transforms.RandomHorizontalFlip(p=0.1),
-            transforms.RandomResizedCrop(32, scale=(0.9, 1.0), ratio=(1.0, 1.0))
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomCrop(32, padding=4)
         ]
     else:
         print('Data augmentation NOT activated!')
@@ -90,26 +90,44 @@ if __name__ == "__main__":
         transforms.ToTensor()
     ])
 
-    base_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
-
-    train_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-        *data_augment_transforms
-    ])
-
     if args.dataset == 'cifar10':
         # Download the train and test set and apply transform on it
-        train_set = datasets.CIFAR10(root='../data', train=True, download=True, transform=train_transform)
-        test_set = datasets.CIFAR10(root='../data', train=False, download=True, transform=base_transform)
+        train_set = datasets.CIFAR10(root='../data', train=True, download=True, transform=transforms.ToTensor())
+        test_set = datasets.CIFAR10(root='../data', train=False, download=True, transform=None)
 
     elif args.dataset == 'svhn':
         # Download the train and test set and apply transform on it
-        train_set = datasets.SVHN(root='../data', split='train', download=True, transform=train_transform)
-        test_set = datasets.SVHN(root='../data', split='test', download=True, transform=base_transform)
+        train_set = datasets.SVHN(root='../data', split='train', download=True, transform=transforms.ToTensor())
+        test_set = datasets.SVHN(root='../data', split='test', download=True, transform=None)
+
+    # Calculate dataset mean & std for normalization
+    print('Calculating dataset mean & standard deviation...')
+
+    r = []
+    g = []
+    b = []
+
+    for i in range(len(train_set)):
+        r.append(np.dstack(train_set[i][0][:, :, 0]))
+        g.append(np.dstack(train_set[i][0][:, :, 1]))
+        b.append(np.dstack(train_set[i][0][:, :, 2]))
+
+    mean = (np.mean(r), np.mean(g), np.mean(b))
+    std = (np.std(r), np.std(g), np.std(b))
+
+    train_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std),
+        *data_augment_transforms
+    ])
+
+    base_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
+    ])
+
+    train_set.transform = train_transform
+    test_set.transform = base_transform
 
     if val_set:
         len_val_set = int(len(train_set) * val_set)
