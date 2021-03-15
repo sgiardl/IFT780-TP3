@@ -91,4 +91,5 @@ class ResBlock(nn.Module):
                                stride=stride, padding=padding, bias=bias)
 
     def forward(self, x):
-        return self.conv2(self.conv1(x)) + 2
+        output = self.conv2(self.conv1(x)) + x
+        return output
