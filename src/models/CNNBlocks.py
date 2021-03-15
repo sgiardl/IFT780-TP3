@@ -51,8 +51,7 @@ class ConvBatchNormReluBlock(nn.Module):
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
-        output = self.relu(self.bn(self.conv(x)))
-        return output
+        return self.relu(self.bn(self.conv(x)))
 
 
 class DenseBlock(nn.Module):
@@ -107,5 +106,13 @@ class BottleneckBlock(nn.Module):
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, bias=bias)
 
     def forward(self, x):
-        output = self.conv1(self.relu(x))
-        return output
+        return self.conv1(self.relu(x))
+
+
+class FullyConnectedBlock(nn.Module):
+    def __init__(self, in_features, out_features, bias=False):
+        super().__init__()
+        self.fc = nn.Linear(in_features, out_features, bias=bias)
+
+    def forward(self, x):
+        return self.fc(x)
