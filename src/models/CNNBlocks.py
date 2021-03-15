@@ -41,3 +41,18 @@ class ResidualBlock(nn.Module):
         output = F.relu(output)
         return output
 
+
+class BaseBlock(nn.Module):
+    """
+    this block is a base block for a convolutionnal network (Conv-BatchNorm-ReLU)
+    """
+
+    def __init__(self, in_channels, out_channels, stride=1, kernel_size=3, padding=0, bias=False):
+        super(BaseBlock, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels,
+                              kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
+        self.bn = nn.BatchNorm2d(out_channels)
+
+    def forward(self, x):
+        return F.relu(self.bn(self.conv(x)))
+
