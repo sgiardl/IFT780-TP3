@@ -44,10 +44,10 @@ class ResidualBlock(nn.Module):
 
 class BaseBlock(nn.Module):
     """
-    this block is a base block for a convolutionnal network (Conv-BatchNorm-ReLU)
+    this block is a base block for a convolutional network (Conv-BatchNorm-ReLU)
     """
 
-    def __init__(self, in_channels, out_channels, stride=1, kernel_size=3, padding=0, bias=False):
+    def __init__(self, in_channels, out_channels, stride=(1,), kernel_size=(3,), padding=(0,), bias=False):
         super(BaseBlock, self).__init__()
         self.conv = nn.Conv2d(in_channels, out_channels,
                               kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
@@ -55,4 +55,40 @@ class BaseBlock(nn.Module):
 
     def forward(self, x):
         return F.relu(self.bn(self.conv(x)))
+
+
+class DenseBlock(nn.Module):
+    """
+    this block is a Dense Block inspired from DenseNets
+    """
+    def __init__(self, in_channels, growth_rate=4, stride=(1,), kernel_size=(3,), padding=(0,), bias=False):
+
+        super(DenseBlock, self).__init__()
+
+        self.bn1, self.conv1, out = self.get_layers(in_channels, growth_rate, stride, kernel_size, padding, bias)
+        self.bn2, self.conv2, out = self.get_layers(out, growth_rate, stride, kernel_size, padding, bias)
+        self.bn3, self.conv3, out = self.get_layers(out, growth_rate, stride, kernel_size, padding, bias)
+
+    @staticmethod
+    def get_layers(in_channels, growth_rate, stride, kernel_size, padding, bias):
+        bn = nn.BatchNorm2d(in_channels)
+        out_channels = in_channels + growth_rate
+        conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
+        return bn, conv, out_channels
+
+    def forward(self, x):
+
+        output = self.conv1(F.relu(self.bn1(x)))
+        output = torch.cat([x, output], 1)
+
+        output = self.conv2(F.relu(self.bn2(output)))
+        output = torch.cat([x, output], 1)
+
+        output = self.conv3(F.relu(self.bn3(output)))
+        output = torch.cat([x, output], 1)
+
+        return output
+
+
+
 
