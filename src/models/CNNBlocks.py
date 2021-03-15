@@ -80,3 +80,15 @@ class DenseBlock(nn.Module):
         c3 = torch.cat([c2, conv3], 1)
 
         return c3
+
+
+class ResBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size,
+                               stride=stride, padding=padding, bias=bias)
+        self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size,
+                               stride=stride, padding=padding, bias=bias)
+
+    def forward(self, x):
+        return self.conv2(self.conv1(x)) + 2
