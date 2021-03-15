@@ -56,27 +56,27 @@ class ConvBatchNormReluBlock(nn.Module):
 
 
 class DenseBlock(nn.Module):
-    def __init__(self, in_channels, out_channels=32, kernel_size=3, stride=1, padding=1):
+    def __init__(self, in_channels, growth_rate=32, kernel_size=3, stride=1, padding=1, bias=False):
         super().__init__()
         self.relu = nn.ReLU(inplace=True)
         self.bn1 = nn.BatchNorm2d(num_channels=in_channels)
-        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=stride, padding=padding)
-        self.bn2 = nn.BatchNorm2d(num_channels=in_channels + out_channels)
-        self.conv2 = nn.Conv2d(in_channels=in_channels + out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=stride, padding=padding)
-        self.bn3 = nn.BatchNorm2d(num_channels=in_channels + 2 * out_channels)
-        self.conv3 = nn.Conv2d(in_channels=in_channels + 2 * out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=stride, padding=padding)
+        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=growth_rate,
+                               kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
+        self.bn2 = nn.BatchNorm2d(num_channels=in_channels + growth_rate)
+        self.conv2 = nn.Conv2d(in_channels=in_channels + growth_rate, out_channels=growth_rate,
+                               kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
+        self.bn3 = nn.BatchNorm2d(num_channels=in_channels + 2 * growth_rate)
+        self.conv3 = nn.Conv2d(in_channels=in_channels + 2 * growth_rate, out_channels=growth_rate,
+                               kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
 
     def forward(self, x):
-        conv1 = self.conv1(self.relu(self.bn(x)))
+        conv1 = self.conv1(self.relu(self.bn1(x)))
         c1 = torch.cat([conv1, x], 1)
 
-        conv2 = self.conv1(self.relu(self.bn(c1)))
+        conv2 = self.conv1(self.relu(self.bn2(c1)))
         c2 = torch.cat([c1, conv2], 1)
 
-        conv3 = self.conv1(self.relu(self.bn(c2)))
+        conv3 = self.conv1(self.relu(self.bn3(c2)))
         c3 = torch.cat([c2, conv3], 1)
 
         return c3
@@ -85,11 +85,27 @@ class DenseBlock(nn.Module):
 class ResBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False):
         super().__init__()
+        self.relu = nn.ReLU(inplace=True)
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size,
                                stride=stride, padding=padding, bias=bias)
+        self.bn1 = nn.BatchNorm2d(out_channels)
         self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size,
                                stride=stride, padding=padding, bias=bias)
+        self.bn2 = nn.BatchNorm2d(out_channels)
 
     def forward(self, x):
-        output = self.conv2(self.conv1(x)) + x
+        conv1 = self.conv1(self.relu(self.bn1(x)))
+        conv2 = self.conv2(self.relu(self.bn2(conv1)))
+
+        return conv2 + x
+
+
+class BottleneckBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=1, bias=False):
+        super().__init__()
+        self.relu = nn.ReLU(inplace=True)
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, bias=bias)
+
+    def forward(self, x):
+        output = self.conv1(self.relu(x))
         return output
