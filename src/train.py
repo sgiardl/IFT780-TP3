@@ -28,7 +28,6 @@ from torchvision import datasets
 from copy import copy
 import numpy as np
 
-
 def argument_parser():
     """
         A parser to allow user to easily experiment different models along with datasets and differents parameters
@@ -61,6 +60,7 @@ def argument_parser():
 
 
 if __name__ == "__main__":
+
     args = argument_parser()
 
     batch_size = args.batch_size
@@ -68,12 +68,11 @@ if __name__ == "__main__":
     val_set = args.validation
     learning_rate = args.lr
     data_augment = args.data_aug
-
     if data_augment:
         print('Data augmentation activated!')
         data_augment_transforms = [
             transforms.RandomRotation(15),
-            transforms.ColorJitter(contrast=0,  # 0.1 for cifar10, 0 for svhn
+            transforms.ColorJitter(contrast=0,
                                    hue=0.1),
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.RandomCrop(32, padding=4)
