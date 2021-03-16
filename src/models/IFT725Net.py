@@ -7,7 +7,7 @@ Authors: Mamadou Mountagha BAH & Pierre-Marc Jodoin
 License:
 Other: Suggestions are welcome
 """
-from abc import ABC
+
 
 import torch.nn as nn
 from models.CNNBaseModel import CNNBaseModel
