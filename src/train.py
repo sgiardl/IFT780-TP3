@@ -25,6 +25,8 @@ from models.UNet import UNet
 from models.VggNet import VggNet
 from torchvision import datasets
 
+from copy import copy
+import numpy as np
 
 def argument_parser():
     """
@@ -68,8 +70,16 @@ if __name__ == "__main__":
     data_augment = args.data_aug
     if data_augment:
         print('Data augmentation activated!')
+        data_augment_transforms = [
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomRotation(15),
+            transforms.ColorJitter(contrast=0.1,
+                                   hue=0.1)
+        ]
     else:
         print('Data augmentation NOT activated!')
+        data_augment_transforms = []
 
     # set hdf5 path according your hdf5 file location
     hdf5_file = '../data/hdf5/ift725_acdc.hdf5'
@@ -79,20 +89,50 @@ if __name__ == "__main__":
         transforms.ToTensor()
     ])
 
-    base_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
-
     if args.dataset == 'cifar10':
         # Download the train and test set and apply transform on it
-        train_set = datasets.CIFAR10(root='../data', train=True, download=True, transform=base_transform)
-        test_set = datasets.CIFAR10(root='../data', train=False, download=True, transform=base_transform)
+        train_set = datasets.CIFAR10(root='../data', train=True, download=True, transform=transforms.ToTensor())
+        test_set = datasets.CIFAR10(root='../data', train=False, download=True, transform=None)
 
     elif args.dataset == 'svhn':
         # Download the train and test set and apply transform on it
-        train_set = datasets.SVHN(root='../data', split='train', download=True, transform=base_transform)
-        test_set = datasets.SVHN(root='../data', split='test', download=True, transform=base_transform)
+        train_set = datasets.SVHN(root='../data', split='train', download=True, transform=transforms.ToTensor())
+        test_set = datasets.SVHN(root='../data', split='test', download=True, transform=None)
+
+    # Calculate dataset mean & std for normalization
+    print('Calculating dataset mean & standard deviation...')
+
+    r = []
+    g = []
+    b = []
+
+    for i in range(len(train_set)):
+        r.append(np.dstack(train_set[i][0][:, :, 0]))
+        g.append(np.dstack(train_set[i][0][:, :, 1]))
+        b.append(np.dstack(train_set[i][0][:, :, 2]))
+
+    mean = (np.mean(r), np.mean(g), np.mean(b))
+    std = (np.std(r), np.std(g), np.std(b))
+
+    train_transform = transforms.Compose([
+        *data_augment_transforms,
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
+    ])
+
+    base_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
+    ])
+
+    train_set.transform = train_transform
+    test_set.transform = base_transform
+
+    if val_set:
+        len_val_set = int(len(train_set) * val_set)
+        train_set, val_set = torch.utils.data.random_split(train_set, [len(train_set) - len_val_set, len_val_set])
+        val_set.dataset = copy(train_set.dataset)
+        val_set.dataset.transform = base_transform
 
     if args.optimizer == 'SGD':
         optimizer_factory = optimizer_setup(torch.optim.SGD, lr=learning_rate, momentum=0.9)
