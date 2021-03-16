@@ -40,21 +40,28 @@ class IFT725Net(CNNBaseModel):
             init_weights(bool): when true uses _initialize_weights function to initialize
             network's weights.
         """
-        super(IFT725Net, self).__init__()
+        super(IFT725Net, self).__init__(num_classes, init_weights)
 
         self.model = nn.Sequential(BaseBlock(3, 10),                   # 3 x 32 x 32 -> 10 x 30 x 30
                                    DenseBlock(10),                     # 10 x 30 x 30 -> 96 x 30 x 30
                                    ResidualBlock(10+(3*32), 100),      # 106 x 30 x 30 -> 100 x 30 x 30
-                                   BottleNeck(100, 60),                # 100 x 30 x 30 -> 60 x 30 x 30
-                                   ResidualBlock(60, 30),              # 60 x 30 x 30 -> 30 x 30 x 30
-                                   BaseBlock(30, 15, kernel_size=5),   # 30 x 30 x 30 -> 15 x 26 x 26
-                                   DenseBlock(15, growth_rate=10),     # 15 x 26 x 26 -> 45 x 26 x 26
-                                   BaseBlock(45, 20, kernel_size=5),   # 45 x 26 x 26 -> 20 x 22 x 22
-                                   BottleNeck(20, 5),                  # 20 x 22 x 22 -> 5 x 22 x 22
-                                   BaseBlock(5, 1),                    # 5 x 22 x 22 -> 1 x 20 x 20
-                                   nn.Flatten(),                       # 20*20 = 400
-                                   nn.Linear(400, 100),                # 400 -> 100
-                                   nn.Linear(100, num_classes))        # 100 -> num_classes
+                                   ResidualBlock(100, 80),             # 100 x 30 x 30 -> 80 x 30 x 30
+                                   ResidualBlock(80, 60),              # 80 x 30 x 30 -> 60 x 30 x 30
+                                   ResidualBlock(60, 40),              # 60 x 30 x 30 -> 40 x 30 x 30
+                                   BottleNeck(40, 20),                 # 40 x 30 x 30 -> 20 x 30 x 30
+                                   ResidualBlock(20, 10),              # 20 x 30 x 30 -> 10 x 30 x 30
+                                   BaseBlock(10, 8, kernel_size=3),    # 10 x 30 x 30 -> 8 x 28 x 28
+                                   BaseBlock(8, 4, kernel_size=3),     # 8 x 28 x 28 -> 4 x 26 x 26
+                                   DenseBlock(4),                      # 4 x 26 x 26 -> 100 x 26 x 26
+                                   BottleNeck(100, 50),                # 100 x 26 x 26 -> 50 x 26 x 26
+                                   BottleNeck(50, 25),                 # 50 x 26 x 26 -> 25 x 26 x 26
+                                   BaseBlock(25, 10, kernel_size=5),   # 25 x 26 x 26 -> 10 x 22 x 22
+                                   BaseBlock(10, 5, kernel_size=5),    # 10 x 22 x 22 -> 5 x 18 x 18
+                                   BottleNeck(5, 1),                   # 5 x 18 x 18 -> 1 x 18 x 18
+                                   nn.Flatten(),                       # 18*18 = 324
+                                   nn.Linear(324, 162),                # 324 -> 162
+                                   nn.Linear(162, 81),                 # 162 -> 81
+                                   nn.Linear(81, num_classes))        # 100 -> num_classes
 
     def forward(self, x):
         return self.model(x)
