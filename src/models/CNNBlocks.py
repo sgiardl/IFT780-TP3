@@ -47,7 +47,7 @@ class BaseBlock(nn.Module):
     this block is a base block for a convolutional network (Conv-BatchNorm-ReLU)
     """
 
-    def __init__(self, in_channels, out_channels, stride=(1,), kernel_size=(3,), padding=(0,), bias=False):
+    def __init__(self, in_channels, out_channels, stride=1, kernel_size=3, padding=0, bias=False):
         super(BaseBlock, self).__init__()
         self.conv = nn.Conv2d(in_channels, out_channels,
                               kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
@@ -61,7 +61,7 @@ class DenseBlock(nn.Module):
     """
     this block is a Dense Block inspired from DenseNets
     """
-    def __init__(self, in_channels, growth_rate=4, stride=(1,), kernel_size=(3,), padding=(1,), bias=False):
+    def __init__(self, in_channels, growth_rate=4, stride=1, kernel_size=3, padding=1, bias=False):
 
         super(DenseBlock, self).__init__()
 
@@ -77,14 +77,9 @@ class DenseBlock(nn.Module):
 
     def forward(self, x):
 
-        output = self.conv1(F.relu(self.bn1(x)))
-        output = torch.cat([x, output], 1)
-
-        output = self.conv2(F.relu(self.bn2(output)))
-        output = torch.cat([x, output], 1)
-
-        output = self.conv3(F.relu(self.bn3(output)))
-        output = torch.cat([x, output], 1)
+        output = torch.cat([x, self.conv1(F.relu(self.bn1(x)))], 1)
+        output = torch.cat([output, self.conv2(F.relu(self.bn2(output)))], 1)
+        output = torch.cat([output, self.conv3(F.relu(self.bn3(output)))], 1)
 
         return output
 
@@ -99,7 +94,7 @@ class BottleNeck(nn.Module):
         :param out_channels:
         """
         super(BottleNeck, self).__init__()
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=(1, 1))
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1)
 
     def forward(self, x):
         return self.conv(x)
