@@ -9,8 +9,8 @@ Other: Suggestions are welcome
 """
 
 import torch.nn as nn
-from src.models.CNNBaseModel import CNNBaseModel
-from src.models.CNNBlocks import ResidualBlock, BaseBlock, DenseBlock, BottleNeck
+from models.CNNBaseModel import CNNBaseModel
+from models.CNNBlocks import ResidualBlock, BaseBlock, DenseBlock, BottleNeck
 
 '''
 TODO
@@ -43,13 +43,18 @@ class IFT725Net(CNNBaseModel):
         super(IFT725Net, self).__init__()
 
         self.model = nn.Sequential(BaseBlock(3, 10),                   # 3 x 32 x 32 -> 10 x 30 x 30
-                                   DenseBlock(10),                     # 10 x 30 x 30 -> 22 x 30 x 30
-                                   ResidualBlock(10+(4*3), 50),        # 22 x 30 x 30 -> 50 x 30 x 30
-                                   BottleNeck(50, 10),                 # 50 x 30 x 30 -> 10 x 30 x 30
-                                   BaseBlock(10, 5, kernel_size=5),    # 10 x 30 x 30 -> 5 x 26 x 26
-                                   BottleNeck(5, 1),                   # 5 x 26 x 26 -> 1 x 26 x 26
-                                   nn.Flatten(),                       # 676
-                                   nn.Linear(676, num_classes))        # 676 -> num_classes
+                                   DenseBlock(10),                     # 10 x 30 x 30 -> 96 x 30 x 30
+                                   ResidualBlock(10+(3*32), 100),      # 106 x 30 x 30 -> 100 x 30 x 30
+                                   BottleNeck(100, 60),                # 100 x 30 x 30 -> 60 x 30 x 30
+                                   ResidualBlock(60, 30),              # 60 x 30 x 30 -> 30 x 30 x 30
+                                   BaseBlock(30, 15, kernel_size=5),   # 30 x 30 x 30 -> 15 x 26 x 26
+                                   DenseBlock(15, growth_rate=10),     # 15 x 26 x 26 -> 45 x 26 x 26
+                                   BaseBlock(45, 20, kernel_size=5),   # 45 x 26 x 26 -> 20 x 22 x 22
+                                   BottleNeck(20, 5),                  # 20 x 22 x 22 -> 5 x 22 x 22
+                                   BaseBlock(5, 1),                    # 5 x 22 x 22 -> 1 x 20 x 20
+                                   nn.Flatten(),                       # 20*20 = 400
+                                   nn.Linear(400, 100),                # 400 -> 100
+                                   nn.Linear(100, num_classes))        # 100 -> num_classes
 
     def forward(self, x):
         return self.model(x)
