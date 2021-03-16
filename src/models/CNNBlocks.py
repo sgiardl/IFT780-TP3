@@ -46,7 +46,6 @@ class ConvBatchNormReluBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False):
         super().__init__()
 
-        self.in_channels = in_channels
         self.out_channels = out_channels
 
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size,
@@ -62,7 +61,6 @@ class DenseBlock(nn.Module):
     def __init__(self, in_channels, growth_rate=64, kernel_size=3, stride=1, padding=1, bias=False):
         super().__init__()
 
-        self.in_channels = in_channels
         self.out_channels = growth_rate
 
         self.relu = nn.ReLU()
@@ -96,7 +94,6 @@ class ResBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False):
         super().__init__()
 
-        self.in_channels = in_channels
         self.out_channels = out_channels
 
         self.relu = nn.ReLU()
@@ -154,7 +151,6 @@ class FullyConnectedBlock(nn.Module):
     def __init__(self, in_features, out_features, bias=False):
         super().__init__()
 
-        self.in_features = in_features
         self.out_features = out_features
 
         self.fc = nn.Linear(in_features, out_features, bias=bias)
