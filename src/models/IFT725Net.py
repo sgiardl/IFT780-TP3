@@ -7,6 +7,7 @@ Authors: Mamadou Mountagha BAH & Pierre-Marc Jodoin
 License:
 Other: Suggestions are welcome
 """
+from abc import ABC
 
 import torch.nn as nn
 from models.CNNBaseModel import CNNBaseModel
@@ -27,6 +28,8 @@ Ajouter du code ici pour faire fonctionner le réseau IFT725Net.  Le réseau est
 
 '''
 
+from models.CNNBlocks import ConvBatchNormReluBlock, DenseBlock, ResBlock, BottleneckBlock, FullyConnectedBlock
+
 
 class IFT725Net(CNNBaseModel):
     """
@@ -40,8 +43,55 @@ class IFT725Net(CNNBaseModel):
             init_weights(bool): when true uses _initialize_weights function to initialize
             network's weights.
         """
-        super(IFT725Net, self).__init__()
+        super(IFT725Net, self).__init__(num_classes, init_weights)
 
+        out_channels = 64
+        self.output_shape = 4 * 8 * out_channels
+
+        self.ConvBatchNormRelu1 = ConvBatchNormReluBlock(3, out_channels, stride=2)
+        self.ConvBatchNormRelu2 = ConvBatchNormReluBlock(self.ConvBatchNormRelu1.out_channels, out_channels)
+        self.ConvBatchNormRelu3 = ConvBatchNormReluBlock(self.ConvBatchNormRelu2.out_channels, out_channels)
+
+        self.DenseBlock1 = DenseBlock(self.ConvBatchNormRelu3.out_channels)
+        self.DenseBlock2 = DenseBlock(self.DenseBlock1.out_channels)
+        self.DenseBlock3 = DenseBlock(self.DenseBlock2.out_channels)
+
+        self.ResBlock1 = ResBlock(self.DenseBlock3.out_channels, 4 * out_channels, stride=2)
+        self.ResBlock2 = ResBlock(self.ResBlock1.out_channels, 4 * out_channels)
+        self.ResBlock3 = ResBlock(self.ResBlock2.out_channels, 4 * out_channels)
+
+        self.BottleneckBlock1 = BottleneckBlock(self.ResBlock3.out_channels, 8 * out_channels, stride=2)
+        self.BottleneckBlock2 = BottleneckBlock(self.BottleneckBlock1.out_channels, 8 * out_channels)
+        self.BottleneckBlock3 = BottleneckBlock(self.BottleneckBlock2.out_channels, 8 * out_channels)
+
+        self.AveragePool = nn.AdaptiveAvgPool2d(1)
+
+        self.FullyConnectedLayer1 = FullyConnectedBlock(self.output_shape, 1024)
+        self.FullyConnectedLayer2 = FullyConnectedBlock(self.FullyConnectedLayer1.out_features, num_classes)
+
+    def forward(self, x):
+        output = self.ConvBatchNormRelu1(x)
+        output = self.ConvBatchNormRelu2(output)
+        output = self.ConvBatchNormRelu3(output)
+
+        output = self.DenseBlock1(output)
+        output = self.DenseBlock2(output)
+        output = self.DenseBlock3(output)
+
+        output = self.ResBlock1(output)
+        output = self.ResBlock2(output)
+        output = self.ResBlock3(output)
+
+        output = self.BottleneckBlock1(output)
+        output = self.BottleneckBlock2(output)
+        output = self.BottleneckBlock3(output)
+
+        output = self.AveragePool(output)
+
+        output = self.FullyConnectedLayer1(output.view(-1, self.output_shape))
+        output = self.FullyConnectedLayer2(output)
+
+        return output
 
 
 '''
