@@ -57,4 +57,43 @@ class CNNBaseBlock(nn.Module):
     def forward(self, x):
         output = self.relu(self.bn(self.conv(x)))
         return output
+    
+class DenseLayer(nn.Module):
+    """
+    this layer is the dense layer of the DenseBlock block.
+    """
+    
+    def __init__(self, in_channels, growth_rate=64, kernel_size=3, stride=1, padding=1, bias=False):
+        super().__init__()
+        
+        self.bn = nn.BatchNorm2d(in_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv = nn.Conv2d(in_channels, growth_rate, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
+        
+    def forward(self, x):
+        output = self.conv(self.relu(self.bn(x)))
+        return output
+    
+class DenseBlock(nn.Module):
+    """
+    this block is the dense block of the IFT725_NET network.
+    """
+    
+    def __init__(self, in_channels, growth_rate=64, kernel_size=3, stride=1, padding=1, bias=False):
+        super().__init__()
+        
+        self.Denselayer1 = DenseLayer(in_channels, growth_rate, kernel_size, stride, padding, bias)
+        self.Denselayer2 = DenseLayer(in_channels+growth_rate, growth_rate, kernel_size, stride, padding, bias)
+        self.Denselayer3 = DenseLayer(in_channels+(2*growth_rate), growth_rate, kernel_size, stride, padding, bias)
+        
+    def forward(self, x):
+        denselayer1 = self.Denselayer1(x)
+        cat1 = torch.cat([denselayer1, x], 1)
+        
+        denselayer2 = self.Denselayer2(cat1)
+        cat2 = torch.cat([denselayer2, cat1], 1)
+        
+        denselayer3 = self.Denselayer3(cat2)
+        cat3 = torch.cat([denselayer3, cat2], 1)
 
+        return cat2
