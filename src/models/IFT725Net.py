@@ -8,7 +8,6 @@ License:
 Other: Suggestions are welcome
 """
 
-
 import torch.nn as nn
 from models.CNNBaseModel import CNNBaseModel
 from models.CNNBlocks import ResidualBlock
