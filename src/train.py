@@ -26,7 +26,7 @@ from models.VggNet import VggNet
 from torchvision import datasets
 
 from copy import copy
-import numpy as np
+
 
 def argument_parser():
     """
