@@ -97,6 +97,32 @@ class DenseBlock(nn.Module):
         cat3 = torch.cat([denselayer3, cat2], 1)
 
         return cat3
+    
+class ResBlock(nn.Module):
+    """
+    this block is the residual block of the IFT725_NET network.
+    """
+    
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU(inplace=True)
+        
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        
+        self.shortcut_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False)
+        self.shortcut_self_bn = nn.BatchNorm2d(out_channels)
+        self.shortcut = nn.Sequential(self.shortcut_conv, self.shortcut_self_bn)
+        
+    def forward(self, x):
+        output = self.relu(self.bn1(self.conv1(x)))
+        output = self.bn2(self.conv2(output))
+        output += self.shortcut(x)
+        output = self.relu(output)
+        return output
 
 class BottleneckBlock(nn.Module):
     """
