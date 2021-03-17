@@ -42,26 +42,25 @@ class IFT725Net(CNNBaseModel):
         """
         super(IFT725Net, self).__init__(num_classes, init_weights)
 
-        self.model = nn.Sequential(BaseBlock(3, 10),                   # 3 x 32 x 32 -> 10 x 30 x 30
-                                   DenseBlock(10),                     # 10 x 30 x 30 -> 96 x 30 x 30
-                                   ResidualBlock(10+(3*32), 100),      # 106 x 30 x 30 -> 100 x 30 x 30
-                                   ResidualBlock(100, 80),             # 100 x 30 x 30 -> 80 x 30 x 30
-                                   ResidualBlock(80, 60),              # 80 x 30 x 30 -> 60 x 30 x 30
-                                   ResidualBlock(60, 40),              # 60 x 30 x 30 -> 40 x 30 x 30
-                                   BottleNeck(40, 20),                 # 40 x 30 x 30 -> 20 x 30 x 30
-                                   ResidualBlock(20, 10),              # 20 x 30 x 30 -> 10 x 30 x 30
-                                   BaseBlock(10, 8, kernel_size=3),    # 10 x 30 x 30 -> 8 x 28 x 28
-                                   BaseBlock(8, 4, kernel_size=3),     # 8 x 28 x 28 -> 4 x 26 x 26
-                                   DenseBlock(4),                      # 4 x 26 x 26 -> 100 x 26 x 26
-                                   BottleNeck(100, 50),                # 100 x 26 x 26 -> 50 x 26 x 26
-                                   BottleNeck(50, 25),                 # 50 x 26 x 26 -> 25 x 26 x 26
-                                   BaseBlock(25, 10, kernel_size=5),   # 25 x 26 x 26 -> 10 x 22 x 22
-                                   BaseBlock(10, 5, kernel_size=5),    # 10 x 22 x 22 -> 5 x 18 x 18
-                                   BottleNeck(5, 1),                   # 5 x 18 x 18 -> 1 x 18 x 18
-                                   nn.Flatten(),                       # 18*18 = 324
-                                   nn.Linear(324, 162),                # 324 -> 162
-                                   nn.Linear(162, 81),                 # 162 -> 81
-                                   nn.Linear(81, num_classes))        # 100 -> num_classes
+        self.model = nn.Sequential(BaseBlock(3, 10, stride=2, kernel_size=4),     # 3 x 32 x 32 -> 10 x 15 x 15
+                                   BaseBlock(10, 5, stride=2),                    # 10 x 15 x 15 ->  5 x 7 x 7
+                                   DenseBlock(5),                                 # 5 x 7 x 7 ->  101 x 7 x 7
+                                   ResidualBlock(101, 80),                        # 101 x 7 x 7 -> 80 x 7 x 7
+                                   BaseBlock(80, 80, padding=2),                  # 80 x 7 x 7 -> 80 x 9 x 9
+                                   ResidualBlock(80, 40),                         # 80 x 9 x 9 -> 40 x 9 x 9
+                                   BaseBlock(40, 40, padding=2),                  # 40 x 9 x 9 -> 40 x 11 x 11
+                                   ResidualBlock(40, 20),                         # 40 x 11 x 11 -> 20 x 11 x 11
+                                   DenseBlock(20, growth_rate=10),                # 20 x 11 x 11 -> 50 x 11 x 11
+                                   ResidualBlock(50, 25),                         # 50 x 11 x 11 -> 25 x 11 x 11
+                                   BottleNeck(25, 10),                            # 25 x 11 x 11 -> 10 x 11 x 11
+                                   BaseBlock(10, 10, stride=2),                   # 10 x 11 x 11 -> 10 x 5 x 5
+                                   DenseBlock(10, growth_rate=10),                # 10 x 5 x 5 -> 40 x 5 x 5
+                                   ResidualBlock(40, 20),
+                                   ResidualBlock(20, 10),
+                                   BaseBlock(10, 10),                             # 10 x 5 x 5 -> 10 x 3 x 3,
+                                   BaseBlock(10, 100),             # 10 x 4 x 4 -> 100 x 1 x 1
+                                   nn.Flatten(),
+                                   nn.Linear(100, num_classes))
 
     def forward(self, x):
         return self.model(x)
