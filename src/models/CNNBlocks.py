@@ -96,4 +96,20 @@ class DenseBlock(nn.Module):
         denselayer3 = self.Denselayer3(cat2)
         cat3 = torch.cat([denselayer3, cat2], 1)
 
-        return cat2
+        return cat3
+
+class BottleneckBlock(nn.Module):
+    """
+    this block is the bottleneck block of the IFT725_NET network.
+    """
+
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False)
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        output = self.relu(self.conv(x))
+        return output
+    
