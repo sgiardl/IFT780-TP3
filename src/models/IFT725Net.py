@@ -12,6 +12,12 @@ import torch.nn as nn
 from models.CNNBaseModel import CNNBaseModel
 from models.CNNBlocks import ResidualBlock
 
+from models.CNNBlocks import CNNBaseBlock
+from models.CNNBlocks import DenseBlock
+from models.CNNBlocks import ResBlock
+from models.CNNBlocks import BottleneckBlock
+from models.CNNBlocks import FullyconnectedBlock
+
 '''
 TODO
 
@@ -40,9 +46,33 @@ class IFT725Net(CNNBaseModel):
             init_weights(bool): when true uses _initialize_weights function to initialize
             network's weights.
         """
-        super(IFT725Net, self).__init__()
+        super(IFT725Net, self).__init__(num_classes, init_weights)
+        
+        self.model = nn.Sequential(CNNBaseBlock(in_channels=3, out_channels=8),   # 3*32*32 ---> 8*32*32
+                                   CNNBaseBlock(in_channels=8, out_channels=16),   # 8*32*32 ---> 16*32*32
+                                   CNNBaseBlock(in_channels=16, out_channels=16),   # 16*32*32 ---> 16*32*32
+                                   
+                                   DenseBlock(in_channels=16, growth_rate=32),   # 16*32*32 ---> 96*32*32
+                                   DenseBlock(in_channels=(32*3)+16, growth_rate=32),   # (32*3)*2+16*32*32 ---> 96*32*32
+                                   DenseBlock(in_channels=(32*3)*2+16, growth_rate=32),   # (32*3)*3+16*32*32 ---> 96*32*32
+                                   
+                                   ResBlock(in_channels=16+(3*32)*3, out_channels=256, stride=2),   # (16+96)*32*32 ---> 128*16*16
+                                   ResBlock(in_channels=256, out_channels=128),   # 128*32*32 ---> 64*32*32 !!!
+                                   ResBlock(in_channels=128, out_channels=64),   # 64*32*32 ---> 32*32*32!!!
+                                   
+                                   BottleneckBlock(in_channels=64, out_channels=32, stride=2),   # 32*32*32 ---> 16*32*32!!!
+                                   BottleneckBlock(in_channels=32, out_channels=16),   # 16*32*32 ---> 8*32*32!!!
+                                   BottleneckBlock(in_channels=16, out_channels=8),   # 8*32*32 ---> 4*32*32!!!
+                                   
+                                   nn.Flatten(),   # 8*32*32 ---> (8196=8*32*32)!!!   16*8*8
+                                   
+                                   #FullyconnectedBlock(8*16*16, 1024),   # (8*32*32) ---> 100!!!
+                                   FullyconnectedBlock(512, num_classes)   # 100 ---> 10!!!
+                                  )                                   
 
-
+    def forward(self, x):
+        output = self.model(x)
+        return output        
 
 '''
 FIN DE VOTRE CODE
