@@ -112,4 +112,17 @@ class BottleneckBlock(nn.Module):
     def forward(self, x):
         output = self.relu(self.conv(x))
         return output
-    
+
+class FullyconnectedBlock(nn.Module):
+    """
+    this block is the Fullyconnected block of the IFT725_NET network.
+    """
+
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        
+        self.fc = nn.Linear(in_channels, out_channels, bias=False)
+
+    def forward(self, x):
+        output = self.fc(x)
+        return output 
