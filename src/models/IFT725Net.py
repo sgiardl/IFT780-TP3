@@ -45,52 +45,26 @@ class IFT725Net(CNNBaseModel):
         super(IFT725Net, self).__init__(num_classes, init_weights)
 
         out_channels = 64
-        self.output_shape = 4 * 8 * out_channels
 
-        self.ConvBatchNormRelu1 = ConvBatchNormReluBlock(3, out_channels, stride=2)
-        self.ConvBatchNormRelu2 = ConvBatchNormReluBlock(self.ConvBatchNormRelu1.out_channels, out_channels)
-        self.ConvBatchNormRelu3 = ConvBatchNormReluBlock(self.ConvBatchNormRelu2.out_channels, out_channels)
-
-        self.DenseBlock1 = DenseBlock(self.ConvBatchNormRelu3.out_channels)
-        self.DenseBlock2 = DenseBlock(self.DenseBlock1.out_channels)
-        self.DenseBlock3 = DenseBlock(self.DenseBlock2.out_channels)
-
-        self.ResBlock1 = ResBlock(self.DenseBlock3.out_channels, 4 * out_channels, stride=2)
-        self.ResBlock2 = ResBlock(self.ResBlock1.out_channels, 4 * out_channels)
-        self.ResBlock3 = ResBlock(self.ResBlock2.out_channels, 4 * out_channels)
-
-        self.BottleneckBlock1 = BottleneckBlock(self.ResBlock3.out_channels, 8 * out_channels, stride=2)
-        self.BottleneckBlock2 = BottleneckBlock(self.BottleneckBlock1.out_channels, 8 * out_channels)
-        self.BottleneckBlock3 = BottleneckBlock(self.BottleneckBlock2.out_channels, 8 * out_channels)
-
-        self.AveragePool = nn.AdaptiveAvgPool2d(1)
-
-        self.FullyConnectedLayer1 = FullyConnectedBlock(self.output_shape, 1024)
-        self.FullyConnectedLayer2 = FullyConnectedBlock(self.FullyConnectedLayer1.out_features, num_classes)
+        self.model = nn.Sequential(ConvBatchNormReluBlock(3, out_channels, stride=2),
+                                   ConvBatchNormReluBlock(out_channels, out_channels),
+                                   ConvBatchNormReluBlock(out_channels, out_channels),
+                                   DenseBlock(out_channels),
+                                   DenseBlock(out_channels * 4),
+                                   DenseBlock(out_channels * 7),
+                                   ResBlock(out_channels * 10, out_channels * 4, stride=2),
+                                   ResBlock(out_channels * 4, out_channels * 4),
+                                   ResBlock(out_channels * 4, out_channels * 4),
+                                   BottleneckBlock(out_channels * 4, out_channels * 8, stride=2),
+                                   BottleneckBlock(out_channels * 32, out_channels * 8),
+                                   BottleneckBlock(out_channels * 32, out_channels * 8),
+                                   nn.AdaptiveAvgPool2d(1),
+                                   nn.Flatten(),
+                                   FullyConnectedBlock(out_channels * 32, 1024),
+                                   FullyConnectedBlock(1024, num_classes))
 
     def forward(self, x):
-        output = self.ConvBatchNormRelu1(x)
-        output = self.ConvBatchNormRelu2(output)
-        output = self.ConvBatchNormRelu3(output)
-
-        output = self.DenseBlock1(output)
-        output = self.DenseBlock2(output)
-        output = self.DenseBlock3(output)
-
-        output = self.ResBlock1(output)
-        output = self.ResBlock2(output)
-        output = self.ResBlock3(output)
-
-        output = self.BottleneckBlock1(output)
-        output = self.BottleneckBlock2(output)
-        output = self.BottleneckBlock3(output)
-
-        output = self.AveragePool(output)
-
-        output = self.FullyConnectedLayer1(output.view(-1, self.output_shape))
-        output = self.FullyConnectedLayer2(output)
-
-        return output
+        return self.model(x)
 
 
 '''
