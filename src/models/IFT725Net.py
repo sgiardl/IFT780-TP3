@@ -48,31 +48,35 @@ class IFT725Net(CNNBaseModel):
         """
         super(IFT725Net, self).__init__(num_classes, init_weights)
         
-        self.model = nn.Sequential(CNNBaseBlock(in_channels=3, out_channels=8),   # 3*32*32 ---> 8*32*32
-                                   CNNBaseBlock(in_channels=8, out_channels=16),   # 8*32*32 ---> 16*32*32
-                                   CNNBaseBlock(in_channels=16, out_channels=16),   # 16*32*32 ---> 16*32*32
+        self.model = nn.Sequential(
+                                   CNNBaseBlock(in_channels=3, out_channels=32),   # 3*32*32 ---> 32*32*32
+                                   CNNBaseBlock(in_channels=32, out_channels=64),   # 32*32*32---> 64*32*32
+                                   CNNBaseBlock(in_channels=64, out_channels=64, stride=2),   # 64*32*32 ---> 64*16*16
+
+                                   DenseBlock(in_channels=64, growth_rate=32),   # 64*16*16 ---> 96+64*16*16
+                                   DenseBlock(in_channels=96+64, growth_rate=32),   # 96+64*16*16---> (96*2)+64*16*16
+                                   DenseBlock(in_channels=96*2+64, growth_rate=32),   # (96*2)+64*16*16---> (96*3)+64*16*16
                                    
-                                   DenseBlock(in_channels=16, growth_rate=32),   # 16*32*32 ---> 96*32*32
-                                   DenseBlock(in_channels=(32*3)+16, growth_rate=32),   # (32*3)*2+16*32*32 ---> 96*32*32
-                                   DenseBlock(in_channels=(32*3)*2+16, growth_rate=32),   # (32*3)*3+16*32*32 ---> 96*32*32
+                                   nn.Dropout(p=0.2),
+                                   BottleneckBlock(in_channels=96*3+64, out_channels=96*3+64, stride=2),   # (96*3)+64*16*16 ---> (96*3)+64*8*8
                                    
-                                   ResBlock(in_channels=16+(3*32)*3, out_channels=256, stride=2),   # (16+96)*32*32 ---> 128*16*16
-                                   ResBlock(in_channels=256, out_channels=128),   # 128*32*32 ---> 64*32*32 !!!
-                                   ResBlock(in_channels=128, out_channels=64),   # 64*32*32 ---> 32*32*32!!!
+                                   ResBlock(in_channels=96*3+64, out_channels=256),   # (96*3)+64*8*8 ---> 256*8*8
+                                   ResBlock(in_channels=256, out_channels=128),   # 256*8*8 ---> 128*8*8
+                                   ResBlock(in_channels=128, out_channels=64),   # 128*8*8 ---> 64*8*8
+            
+                                   nn.Dropout(p=0.1),
+            
+                                   CNNBaseBlock(in_channels=64, out_channels=64, stride=2),   # 64*8*8 ---> 64*4*4
+                                   CNNBaseBlock(in_channels=64, out_channels=32),   # 64*4*4 ---> 32*4*4
+                                   CNNBaseBlock(in_channels=32, out_channels=16),   # 32*4*4 ---> 16*4*4
                                    
-                                   BottleneckBlock(in_channels=64, out_channels=32, stride=2),   # 32*32*32 ---> 16*32*32!!!
-                                   BottleneckBlock(in_channels=32, out_channels=16),   # 16*32*32 ---> 8*32*32!!!
-                                   BottleneckBlock(in_channels=16, out_channels=8),   # 8*32*32 ---> 4*32*32!!!
-                                   
-                                   nn.Flatten(),   # 8*32*32 ---> (8196=8*32*32)!!!   16*8*8
-                                   
-                                   #FullyconnectedBlock(8*16*16, 1024),   # (8*32*32) ---> 100!!!
-                                   FullyconnectedBlock(512, num_classes)   # 100 ---> 10!!!
+                                   nn.Flatten(),   # 16*4*4 ---> 256
+                                
+                                   FullyconnectedBlock(256, num_classes)   # 256 ---> 10
                                   )                                   
 
     def forward(self, x):
-        output = self.model(x)
-        return output        
+        return self.model(x)        
 
 '''
 FIN DE VOTRE CODE
