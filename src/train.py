@@ -39,7 +39,7 @@ def argument_parser():
                                                  " different datasets. Be aware that when using UNet model there is no"
                                                  " need to provide a dataset since UNet model only train "
                                                  "on acdc dataset.")
-    parser.add_argument('--model', type=str, default="CnnVanilla",
+    parser.add_argument('--model', type=str, default="UNet",
                         choices=["CnnVanilla", "VggNet", "AlexNet", "ResNet", "IFT725Net", "UNet"])
     parser.add_argument('--dataset', type=str, default="cifar10", choices=["cifar10", "svhn"])
     parser.add_argument('--batch_size', type=int, default=20,
@@ -70,13 +70,23 @@ if __name__ == "__main__":
     data_augment = args.data_aug
     if data_augment:
         print('Data augmentation activated!')
-        data_augment_transforms = [
-            transforms.RandomRotation(15),
-            transforms.ColorJitter(contrast=0.1,
-                                   hue=0.1),
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomCrop(32, padding=4)
-        ]
+        if args.model == 'UNet':
+            data_augment_transforms = [
+                transforms.RandomRotation(15),
+                transforms.Grayscale(num_output_channels=3),
+                transforms.ColorJitter(brightness=0.1,
+                                       contrast=0.1),
+                transforms.RandomCrop(256, padding=4)
+            ]
+        else:
+            data_augment_transforms = [
+                transforms.RandomRotation(15),
+                transforms.ColorJitter(contrast=0.1,
+                                       hue=0.1),
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.RandomCrop(32, padding=4)
+            ]
+
     else:
         print('Data augmentation NOT activated!')
         data_augment_transforms = []
@@ -86,6 +96,11 @@ if __name__ == "__main__":
 
     # Transform is used to normalize data among others
     acdc_base_transform = transforms.Compose([
+        transforms.ToTensor()
+    ])
+
+    acdc_train_transform = transforms.Compose([
+        *data_augment_transforms,
         transforms.ToTensor()
     ])
 
@@ -110,12 +125,6 @@ if __name__ == "__main__":
         train_set = datasets.SVHN(root='../data', split='train', download=True, transform=train_transform)
         test_set = datasets.SVHN(root='../data', split='test', download=True, transform=base_transform)
 
-    if val_set:
-        len_val_set = int(len(train_set) * val_set)
-        train_set, val_set = torch.utils.data.random_split(train_set, [len(train_set) - len_val_set, len_val_set])
-        val_set.dataset = copy(train_set.dataset)
-        val_set.dataset.transform = base_transform
-
     if args.optimizer == 'SGD':
         optimizer_factory = optimizer_setup(torch.optim.SGD, lr=learning_rate, momentum=0.9)
     elif args.optimizer == 'Adam':
@@ -137,6 +146,12 @@ if __name__ == "__main__":
 
         train_set = HDF5Dataset('train', hdf5_file, transform=acdc_base_transform)
         test_set = HDF5Dataset('test', hdf5_file, transform=acdc_base_transform)
+
+    if val_set:
+        len_val_set = int(len(train_set) * val_set)
+        train_set, val_set = torch.utils.data.random_split(train_set, [len(train_set) - len_val_set, len_val_set])
+        val_set.dataset = copy(train_set.dataset)
+        val_set.dataset.transform = acdc_base_transform if args.model == 'UNet' else base_transform
 
     model_trainer = CNNTrainTestManager(model=model,
                                         trainset=train_set,

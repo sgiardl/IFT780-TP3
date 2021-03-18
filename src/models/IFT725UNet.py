@@ -20,7 +20,7 @@ mais comprenant des connexions résiduelles et denses.  Soyez originaux et surto
 
 '''
 
-class ÌFT725UNet(CNNBaseModel):
+class IFT725UNet(CNNBaseModel):
     """
      Class that implements a brand new segmentation CNN
     """
@@ -33,7 +33,7 @@ class ÌFT725UNet(CNNBaseModel):
             init_weights(bool): when true uses _initialize_weights function to initialize
             network's weights.
         """
-        super(UNet, self).__init__()
+        super().__init__(num_classes, init_weights)
 
 '''
 Fin de votre code.
