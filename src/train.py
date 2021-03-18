@@ -28,8 +28,6 @@ from torchvision import datasets
 from copy import copy
 
 
-
-
 def argument_parser():
     """
         A parser to allow user to easily experiment different models along with datasets and differents parameters
