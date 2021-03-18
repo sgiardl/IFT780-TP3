@@ -148,7 +148,8 @@ class FullyconnectedBlock(nn.Module):
         super().__init__()
         
         self.fc = nn.Linear(in_channels, out_channels, bias=False)
+        self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
-        output = self.fc(x)
+        output = self.relu(self.fc(x))
         return output 
