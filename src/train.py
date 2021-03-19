@@ -78,7 +78,7 @@ if __name__ == "__main__":
                 transforms.Lambda(lambda img: img * uniform(0.9, 1.1)),
                 transforms.ToPILImage(),
                 transforms.RandomRotation(15),
-                transforms.RandomCrop(256, padding=4),
+                transforms.RandomCrop(256),
                 transforms.Lambda(lambda img: img.convert('F')),
                 np.array
             ]
