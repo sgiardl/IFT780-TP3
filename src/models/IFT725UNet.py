@@ -20,7 +20,7 @@ mais comprenant des connexions résiduelles et denses.  Soyez originaux et surto
 
 '''
 
-class ÌFT725UNet(CNNBaseModel):
+class IFT725UNet(CNNBaseModel):
     """
      Class that implements a brand new segmentation CNN
     """

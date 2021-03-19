@@ -22,6 +22,7 @@ from models.CNNVanilla import CnnVanilla
 from models.IFT725Net import IFT725Net
 from models.ResNet import ResNet
 from models.UNet import UNet
+from models.IFT725UNet import IFT725UNet
 from models.VggNet import VggNet
 from torchvision import datasets
 
@@ -40,7 +41,7 @@ def argument_parser():
                                                  " need to provide a dataset since UNet model only train "
                                                  "on acdc dataset.")
     parser.add_argument('--model', type=str, default="CnnVanilla",
-                        choices=["CnnVanilla", "VggNet", "AlexNet", "ResNet", "IFT725Net", "UNet"])
+                        choices=["CnnVanilla", "VggNet", "AlexNet", "ResNet", "IFT725Net", "IFT725UNet", "UNet"])
     parser.add_argument('--dataset', type=str, default="cifar10", choices=["cifar10", "svhn"])
     parser.add_argument('--batch_size', type=int, default=20,
                         help='The size of the training batch')
@@ -70,7 +71,7 @@ if __name__ == "__main__":
     data_augment = args.data_aug
     if data_augment:
         print('Data augmentation activated!')
-        if args.model == 'UNet':
+        if args.model == 'UNet' or args.model == 'IFT725UNet':
             data_augment_transforms = [
                 transforms.RandomRotation(15),
                 transforms.Grayscale(num_output_channels=1),
@@ -121,7 +122,10 @@ if __name__ == "__main__":
         len_val_set = int(len(train_set) * val_set)
         train_set, val_set = torch.utils.data.random_split(train_set, [len(train_set) - len_val_set, len_val_set])
         val_set.dataset = copy(train_set.dataset)
-        val_set.dataset.transform = base_transform
+        if args.model == 'UNet' or args.model == 'IFT725UNet':
+            val_set.dataset.transform = acdc_base_transform
+        else:
+            val_set.dataset.transform = base_transform
 
     if args.optimizer == 'SGD':
         optimizer_factory = optimizer_setup(torch.optim.SGD, lr=learning_rate, momentum=0.9)
@@ -138,6 +142,12 @@ if __name__ == "__main__":
         model = ResNet(num_classes=10)
     elif args.model == 'IFT725Net':
         model = IFT725Net(num_classes=10)
+    elif args.model == 'IFT725UNet':
+        model = IFT725UNet(num_classes=4)
+        args.dataset = 'acdc'
+
+        train_set = HDF5Dataset('train', hdf5_file, transform=acdc_base_transform)
+        test_set = HDF5Dataset('test', hdf5_file, transform=acdc_base_transform)
     elif args.model == 'UNet':
         model = UNet(num_classes=4)
         args.dataset = 'acdc'
