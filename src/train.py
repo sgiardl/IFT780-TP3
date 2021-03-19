@@ -70,13 +70,20 @@ if __name__ == "__main__":
     data_augment = args.data_aug
     if data_augment:
         print('Data augmentation activated!')
-        data_augment_transforms = [
-            transforms.RandomRotation(15),
-            transforms.ColorJitter(contrast=0.1,
-                                   hue=0.1),
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomCrop(32, padding=4)
-        ]
+        if args.model == 'UNet':
+            data_augment_transforms = [
+                transforms.RandomRotation(15),
+                transforms.Grayscale(num_output_channels=1),
+                transforms.RandomCrop(32, padding=4)
+            ]
+        else:
+            data_augment_transforms = [
+                transforms.RandomRotation(15),
+                transforms.ColorJitter(contrast=0.1,
+                                       hue=0.1),
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.RandomCrop(32, padding=4)
+            ]
     else:
         print('Data augmentation NOT activated!')
         data_augment_transforms = []
