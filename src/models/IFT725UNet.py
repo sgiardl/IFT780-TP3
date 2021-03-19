@@ -35,6 +35,7 @@ class IFT725UNet(CNNBaseModel):
             init_weights(bool): when true uses _initialize_weights function to initialize
             network's weights.
         """
+
         super(IFT725UNet, self).__init__(num_classes, init_weights)
 
         # Encoding
@@ -94,7 +95,6 @@ class IFT725UNet(CNNBaseModel):
         dec1 = self.R1(torch.cat([enc1, dec2]))
 
         return dec1
-
 
 '''
 Fin de votre code.
