@@ -85,6 +85,7 @@ class HDF5Dataset(data.Dataset):
         # that set the image border to 0
         summed = np.clip(gt_slice[:, :, 1:].sum(axis=-1), 0, 1)
         gt_slice[:, :, 0] = np.abs(1 - summed)
+        gt_slice = np.argmax(gt_slice, axis=2).astype(dtype='float32')
 
         if self.transform is not None:
             # transform numpy array using the provided transform
@@ -105,7 +106,8 @@ class HDF5Dataset(data.Dataset):
             gt_slice = torch.from_numpy(gt_slice)
         # ground truth must be encoded in categorical form instead of one_hot vector
         # in order to allow pytorch's CrossEntropy to compute the loss
-        return img_slice, np.argmax(gt_slice, axis=0)
+        #return img_slice, np.argmax(gt_slice, axis=0)
+        return img_slice, torch.squeeze(gt_slice).type(torch.long)
 
     def __len__(self):
         """
