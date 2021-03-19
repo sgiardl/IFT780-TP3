@@ -43,18 +43,17 @@ class ResidualBlock(nn.Module):
 
 
 class ConvBatchNormReluBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False):
-        super().__init__()
 
-        self.out_channels = out_channels
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False):
+
+        super().__init__()
 
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size,
                               stride=stride, padding=padding, bias=bias)
         self.bn = nn.BatchNorm2d(out_channels)
-        self.relu = nn.ReLU()
 
     def forward(self, x):
-        return self.relu(self.bn(self.conv(x)))
+        return F.relu(self.bn(self.conv(x)))
 
 
 class DenseBlock(nn.Module):
@@ -94,10 +93,6 @@ class ResBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False):
         super().__init__()
 
-        self.out_channels = out_channels
-
-        self.relu = nn.ReLU()
-
         self.shortcut = nn.Conv2d(in_channels, out_channels, kernel_size=1,
                                   stride=stride, bias=bias)
 
@@ -110,10 +105,10 @@ class ResBlock(nn.Module):
                                stride=1, padding=padding, bias=bias)
 
     def forward(self, x):
-        conv1 = self.conv1(self.relu(self.bn1(x)))
-        conv2 = self.conv2(self.relu(self.bn2(conv1)))
+        conv1 = self.conv1(F.relu(self.bn1(x)))
+        conv2 = self.conv2(F.relu(self.bn2(conv1)))
 
-        return conv2 + self.shortcut(self.relu(self.bn1(x)))
+        return conv2 + self.shortcut(F.relu(self.bn1(x)))
 
 
 class BottleneckBlock(nn.Module):

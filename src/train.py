@@ -78,7 +78,7 @@ if __name__ == "__main__":
                 transforms.Lambda(lambda img: img * uniform(0.9, 1.1)),
                 transforms.ToPILImage(),
                 transforms.RandomRotation(15),
-                transforms.RandomCrop(256, padding=4),
+                transforms.RandomCrop(256),
                 transforms.Lambda(lambda img: img.convert('F')),
                 np.array
             ]
@@ -182,7 +182,7 @@ if __name__ == "__main__":
         print("Training {} on {} for {} epochs".format(model.__class__.__name__, args.dataset, args.num_epochs))
         model_trainer.train(num_epochs)
         model_trainer.evaluate_on_test_set()
-        if isinstance(model, UNet):
+        if isinstance(model, UNet) or isinstance(model, IFT725UNet):
             model.save()  # save the model's weights for prediction (see help for more details)
             model_trainer.plot_image_mask_prediction()
         model_trainer.plot_metrics()
