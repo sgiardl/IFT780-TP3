@@ -22,10 +22,13 @@ from models.CNNVanilla import CnnVanilla
 from models.IFT725Net import IFT725Net
 from models.ResNet import ResNet
 from models.UNet import UNet
+from models.IFT725UNet import IFT725UNet
 from models.VggNet import VggNet
 from torchvision import datasets
 
 from copy import copy
+import numpy as np
+from random import uniform
 
 
 def argument_parser():
@@ -40,7 +43,7 @@ def argument_parser():
                                                  " need to provide a dataset since UNet model only train "
                                                  "on acdc dataset.")
     parser.add_argument('--model', type=str, default="CnnVanilla",
-                        choices=["CnnVanilla", "VggNet", "AlexNet", "ResNet", "IFT725Net", "UNet"])
+                        choices=["CnnVanilla", "VggNet", "AlexNet", "ResNet", "IFT725Net", "UNet", "IFT725UNet"])
     parser.add_argument('--dataset', type=str, default="cifar10", choices=["cifar10", "svhn"])
     parser.add_argument('--batch_size', type=int, default=20,
                         help='The size of the training batch')
@@ -70,13 +73,24 @@ if __name__ == "__main__":
     data_augment = args.data_aug
     if data_augment:
         print('Data augmentation activated!')
-        data_augment_transforms = [
-            transforms.RandomRotation(15),
-            transforms.ColorJitter(contrast=0.1,
-                                   hue=0.1),
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomCrop(32, padding=4)
-        ]
+        if args.model == 'UNet' or args.model == "IFT725UNet":
+            data_augment_transforms = [
+                transforms.Lambda(lambda img: img * uniform(0.9, 1.1)),
+                transforms.ToPILImage(),
+                transforms.RandomRotation(15),
+                transforms.RandomCrop(256),
+                transforms.Lambda(lambda img: img.convert('F')),
+                np.array
+            ]
+        else:
+            data_augment_transforms = [
+                transforms.RandomRotation(15),
+                transforms.ColorJitter(contrast=0.1,
+                                       hue=0.1),
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.RandomCrop(32, padding=4)
+            ]
+
     else:
         print('Data augmentation NOT activated!')
         data_augment_transforms = []
@@ -86,6 +100,11 @@ if __name__ == "__main__":
 
     # Transform is used to normalize data among others
     acdc_base_transform = transforms.Compose([
+        transforms.ToTensor()
+    ])
+
+    acdc_train_transform = transforms.Compose([
+        *data_augment_transforms,
         transforms.ToTensor()
     ])
 
@@ -110,12 +129,6 @@ if __name__ == "__main__":
         train_set = datasets.SVHN(root='../data', split='train', download=True, transform=train_transform)
         test_set = datasets.SVHN(root='../data', split='test', download=True, transform=base_transform)
 
-    if val_set:
-        len_val_set = int(len(train_set) * val_set)
-        train_set, val_set = torch.utils.data.random_split(train_set, [len(train_set) - len_val_set, len_val_set])
-        val_set.dataset = copy(train_set.dataset)
-        val_set.dataset.transform = base_transform
-
     if args.optimizer == 'SGD':
         optimizer_factory = optimizer_setup(torch.optim.SGD, lr=learning_rate, momentum=0.9)
     elif args.optimizer == 'Adam':
@@ -135,8 +148,21 @@ if __name__ == "__main__":
         model = UNet(num_classes=4)
         args.dataset = 'acdc'
 
-        train_set = HDF5Dataset('train', hdf5_file, transform=acdc_base_transform)
+        train_set = HDF5Dataset('train', hdf5_file, transform=acdc_train_transform)
         test_set = HDF5Dataset('test', hdf5_file, transform=acdc_base_transform)
+    elif args.model == 'IFT725UNet':
+        model = IFT725UNet(num_classes=4)
+        args.dataset = 'acdc'
+
+        train_set = HDF5Dataset('train', hdf5_file, transform=acdc_train_transform)
+        test_set = HDF5Dataset('test', hdf5_file, transform=acdc_base_transform)
+
+    if val_set:
+        len_val_set = int(len(train_set) * val_set)
+        train_set, val_set = torch.utils.data.random_split(train_set, [len(train_set) - len_val_set, len_val_set])
+        val_set.dataset = copy(train_set.dataset)
+        val_set.dataset.transform = acdc_base_transform if args.model == 'UNet' or args.model == 'IFT725UNet' \
+            else base_transform
 
     model_trainer = CNNTrainTestManager(model=model,
                                         trainset=train_set,
@@ -156,7 +182,7 @@ if __name__ == "__main__":
         print("Training {} on {} for {} epochs".format(model.__class__.__name__, args.dataset, args.num_epochs))
         model_trainer.train(num_epochs)
         model_trainer.evaluate_on_test_set()
-        if isinstance(model, UNet):
+        if isinstance(model, UNet) or isinstance(model, IFT725UNet):
             model.save()  # save the model's weights for prediction (see help for more details)
             model_trainer.plot_image_mask_prediction()
         model_trainer.plot_metrics()
