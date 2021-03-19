@@ -35,7 +35,6 @@ class IFT725UNet(CNNBaseModel):
             network's weights.
         """
         super().__init__()
-        #self.num_output_channels = num_output_channels
         
         # encoder
         in_channels = 1  # gray image
@@ -97,7 +96,7 @@ class IFT725UNet(CNNBaseModel):
             ConvBatchNormReluBlock(out_channels * 2, 32),                    # 128 x 256 x 256 -> 32 x 256 x 256
             nn.Dropout(p=0.2),
             ResBlock(32, 32),                                                # 32 x 256 x 256 -> 32 x 256 x 256
-            ConvBatchNormReluBlock(32, 10, kernel_size=1, padding=0)         # 32 x 256 x 256 -> 10 x 256 x 256
+            ConvBatchNormReluBlock(32, num_classes, kernel_size=1, padding=0)         # 32 x 256 x 256 -> num_classes x 256 x 256
         )
         
         # Skip connections
