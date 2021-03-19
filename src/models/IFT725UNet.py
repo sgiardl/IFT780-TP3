@@ -38,35 +38,35 @@ class IFT725UNet(CNNBaseModel):
         super(IFT725UNet, self).__init__(num_classes, init_weights)
 
         # Encoding
-        self.L1 = nn.Sequential(ConvBatchNormReluBlock(1, 64, kernel_size=5, padding=0),  # 4 x 256 x 256 -> 64 x 252 x 252
+        self.L1 = nn.Sequential(ConvBatchNormReluBlock(1, 64, kernel_size=5, padding=0),  # 1 x 256 x 256 -> 64 x 252 x 252
                                 ResBlock(64, 64))                                         # 64 x 252 x 252 -> 64 x 252 x 252
 
         self.L2 = nn.Sequential(nn.MaxPool2d(2, stride=2),                                 # 64 x 252 x 252 -> 64 x 126 x 126
                                 ConvBatchNormReluBlock(64, 128, kernel_size=3, padding=0), # 64 x 126 x 126 -> 128 x 124 x 124
                                 ResBlock(128, 128))                                        # 128 x 124 x 124 -> 128 x 124 x 124
 
-        self.L3 = nn.Sequential(nn.MaxPool2d(2, stride=2),                                 # 128 x 124 x 124 -> 128 x 68 x 68
-                                ConvBatchNormReluBlock(128, 256, kernel_size=3, padding=0),# 128 x 68 x 68 -> 256 x 66 x 66
-                                ResBlock(256, 256))                                        # 256 x 66 x 66 -> 256 x 66 x 66
+        self.L3 = nn.Sequential(nn.MaxPool2d(2, stride=2),                                 # 128 x 124 x 124 -> 128 x 62 x 62
+                                ConvBatchNormReluBlock(128, 256, kernel_size=3, padding=0),# 128 x 62 x 62 -> 256 x 60 x 60
+                                ResBlock(256, 256))                                        # 256 x 60 x 60 -> 256 x 60 x 60
 
-        self.L4 = nn.Sequential(nn.MaxPool2d(2, stride=2),                                 # 256 x 66 x 66 -> 256 x 33 x 33
-                                ConvBatchNormReluBlock(256, 512, kernel_size=4, padding=0),# 256 x 33 x 33 -> 512 x 30 x 30
-                                ResBlock(512, 512))                                        # 512 x 30 x 30 -> 512 x 30 x 30
+        self.L4 = nn.Sequential(nn.MaxPool2d(2, stride=2),                                 # 256 x 60 x 60 -> 256 x 30 x 30
+                                ConvBatchNormReluBlock(256, 512, kernel_size=3, padding=0),# 256 x 30 x 30 -> 512 x 28 x 28
+                                ResBlock(512, 512))                                        # 512 x 28 x 28 -> 512 x 28 x 28
 
-        self.Middle = nn.Sequential(nn.MaxPool2d(2, stride=2),                             # 512 x 30 x 30 -> 512 x 15 x 15
-                                    DenseBlock(512),                                       # 512 x 15 x 15 -> 704 x 15 x 15
-                                    DenseBlock(704),                                       # 704 x 15 x 15 -> 896 x 15 x 15
-                                    ResBlock(896, 1024),                                   # 896 x 15 x 15 -> 1024 x 15 x 15
-                                    ConvBatchNormReluBlock(1024, 512, kernel_size=2, padding=8))  # 1024 x 15 x 15 -> 512 x 30 x 30
+        self.Middle = nn.Sequential(nn.MaxPool2d(2, stride=2),                             # 512 x 28 x 28 -> 512 x 14 x 14
+                                    DenseBlock(512),                                       # 512 x 14 x 14 -> 704 x 14 x 14
+                                    DenseBlock(704),                                       # 704 x 14 x 14 -> 896 x 14 x 14
+                                    ResBlock(896, 1024),                                   # 896 x 14 x 14 -> 1024 x 14 x 14
+                                    ConvBatchNormReluBlock(1024, 512, kernel_size=3, padding=8))  # 1024 x 15 x 15 -> 512 x 28 x 28
 
         # Decoding
-        self.R4 = nn.Sequential(ConvBatchNormReluBlock(1024, 512, kernel_size=4, padding=0), # 1024 x 30 x 30 -> 512 x 27 x 27
-                                ResBlock(512, 512),                                          # 512 x 27 x 27 -> 512 x 27 x 27
-                                ConvBatchNormReluBlock(512, 256, kernel_size=2, padding=20)) # 512 x 27 x 27 -> 256 x 66 x 66
+        self.R4 = nn.Sequential(ConvBatchNormReluBlock(1024, 512, kernel_size=3, padding=0), # 1024 x 28 x 28 -> 512 x 26 x 26
+                                ResBlock(512, 512),                                          # 512 x 26 x 26 -> 512 x 26 x 26
+                                ConvBatchNormReluBlock(512, 256, kernel_size=3, padding=18)) # 512 x 26 x 26 -> 256 x 60 x 60
 
-        self.R3 = nn.Sequential(ConvBatchNormReluBlock(512, 256, kernel_size=3, padding=0),  # 512 x 66 x 66 -> 256 x 64 x 64
-                                ResBlock(256, 256),                                          # 256 x 64 x 64 -> 256 x 64 x 64
-                                ConvBatchNormReluBlock(256, 128, kernel_size=3, padding=31)) # 256 x 64 x 64 -> 128 x 124 x 124
+        self.R3 = nn.Sequential(ConvBatchNormReluBlock(512, 256, kernel_size=3, padding=0),  # 512 x 60 x 60 -> 256 x 58 x 58
+                                ResBlock(256, 256),                                          # 256 x 58 x 58 -> 256 x 58 x 58
+                                ConvBatchNormReluBlock(256, 128, kernel_size=3, padding=34)) # 256 x 58 x 58 -> 128 x 124 x 124
 
         self.R2 = nn.Sequential(ConvBatchNormReluBlock(256, 128, kernel_size=3, padding=0),  # 256 x 124 x 124 -> 128 x 122 x 122
                                 ResBlock(128, 128),                                          # 128 x 122 x 122 -> 128 x 122 x 122
