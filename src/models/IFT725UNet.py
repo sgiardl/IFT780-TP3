@@ -73,8 +73,7 @@ class IFT725UNet(CNNBaseModel):
                                 ResBlock(128, 128),                                          # 128 x 122 x 122 -> 128 x 122 x 122
                                 ConvBatchNormReluBlock(128, 64, kernel_size=3, padding=68))  # 128 x 122 x 122 -> 64 x 256 x 256
 
-        self.R1 = nn.Sequential(ResBlock(128, 64),                                                  # 128 x 256 x 256 -> 64 x 256 x 256
-                                ConvBatchNormReluBlock(64, num_classes, kernel_size=1, padding=0))  # 64 x 250 x 250 -> c x 250 x 250
+        self.R1 = ResBlock(128, 64)                                                          # 128 x 256 x 256 -> 64 x 256 x 256
 
     def forward(self, x):
 
@@ -89,10 +88,10 @@ class IFT725UNet(CNNBaseModel):
         bottom = self.Middle(enc4)
 
         # Decoding
-        dec4 = self.R4(torch.cat([enc4, bottom]))
-        dec3 = self.R3(torch.cat([enc3, dec4]))
-        dec2 = self.R2(torch.cat([enc2, dec3]))
-        dec1 = self.R1(torch.cat([enc1_1, dec2]))
+        dec4 = self.R4(torch.cat([enc4, bottom], 1))
+        dec3 = self.R3(torch.cat([enc3, dec4], 1))
+        dec2 = self.R2(torch.cat([enc2, dec3], 1))
+        dec1 = self.R1(torch.cat([enc1_1, dec2], 1))
 
         return dec1
 
