@@ -88,20 +88,7 @@ if __name__ == "__main__":
     acdc_base_transform = transforms.Compose([
         transforms.ToTensor()
     ])
-
-    if args.dataset == 'cifar10':
-        # Download the train and test set and apply transform on it
-        train_set = datasets.CIFAR10(root='../data', train=True, download=True, transform=transforms.ToTensor())
-        test_set = datasets.CIFAR10(root='../data', train=False, download=True, transform=None)
-
-    elif args.dataset == 'svhn':
-        # Download the train and test set and apply transform on it
-        train_set = datasets.SVHN(root='../data', split='train', download=True, transform=transforms.ToTensor())
-        test_set = datasets.SVHN(root='../data', split='test', download=True, transform=None)
-
-    # Calculate dataset mean & std for normalization
-    print('Calculating dataset mean & standard deviation...')
-
+    
     r = []
     g = []
     b = []
@@ -115,9 +102,9 @@ if __name__ == "__main__":
     std = (np.std(r), np.std(g), np.std(b))
 
     train_transform = transforms.Compose([
+        *data_augment_transforms
         transforms.ToTensor(),
         transforms.Normalize(mean, std),
-        *data_augment_transforms
     ])
 
     base_transform = transforms.Compose([
@@ -127,6 +114,19 @@ if __name__ == "__main__":
 
     train_set.transform = train_transform
     test_set.transform = base_transform
+
+    if args.dataset == 'cifar10':
+        # Download the train and test set and apply transform on it
+        train_set = datasets.CIFAR10(root='../data', train=True, download=True, transform=train_transform)
+        test_set = datasets.CIFAR10(root='../data', train=False, download=True, transform=base_transform)
+
+    elif args.dataset == 'svhn':
+        # Download the train and test set and apply transform on it
+        train_set = datasets.SVHN(root='../data', split='train', download=True, transform=train_transform)
+        test_set = datasets.SVHN(root='../data', split='test', download=True, transform=base_transform)
+
+    # Calculate dataset mean & std for normalization
+    print('Calculating dataset mean & standard deviation...')
 
     if val_set:
         len_val_set = int(len(train_set) * val_set)
