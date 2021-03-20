@@ -64,9 +64,9 @@ class IFT725UNet(CNNBaseModel):
         self.transitional_block = torch.nn.Sequential(
             nn.MaxPool2d(kernel_size=2),                                      # 512 x 32 x 32 -> 512 x 16 x 16
             
-            ResBlock(out_channels * 8, out_channels * 8),                     # 512 x 16 x 16 -> 512 x 16 x 16
+            #ResBlock(out_channels * 8, out_channels * 8),                     # 512 x 16 x 16 -> 512 x 16 x 16
             DenseBlock(512),                                                  # 512 x 16 x 16 -> 704 x 16 x 16
-            ResBlock(704, 704),                                               # 704 x 16 x 16 -> 704 x 16 x 16
+            #ResBlock(704, 704),                                               # 704 x 16 x 16 -> 704 x 16 x 16
             DenseBlock(704),                                                  # 704 x 16 x 16 -> 896 x 16 x 16
             ResBlock(896, 1024),                                              # 896 x 16 x 16 -> 1024 x 16 x 16
 
@@ -76,25 +76,25 @@ class IFT725UNet(CNNBaseModel):
         # Decode
         self.decoder_layer4 = torch.nn.Sequential(
             ConvBatchNormReluBlock(out_channels * 16, out_channels * 4),       # 1024 x 32 x 32 -> 256 x 32 x 32
-            nn.Dropout(p=0.2),
+            nn.Dropout(p=0.3),
             ResBlock(out_channels * 4, out_channels * 4),                      # 256 x 32 x 32 -> 256 x 32 x 32
             ConvBatchNormReluBlock(out_channels * 4, out_channels * 4, padding=17)  # 256 x 32 x 32 -> 256 x 64 x 64
         )
         self.decoder_layer3 = torch.nn.Sequential(
             ConvBatchNormReluBlock(out_channels * 8, out_channels * 2),       # 512 x 64 x 64 -> 128 x 64 x 64
-            nn.Dropout(p=0.2),
+            nn.Dropout(p=0.3),
             ResBlock(out_channels * 2, out_channels * 2),                     # 128 x 64 x 64 -> 128 x 64 x 64
             ConvBatchNormReluBlock(out_channels * 2, out_channels * 2, padding=33)  # 128 x 64 x 64 -> 128 x 128 x 128
         )
         self.decoder_layer2 = torch.nn.Sequential(
             ConvBatchNormReluBlock(out_channels * 4, out_channels),           # 256 x 128 x 128 -> 64 x 128 x 128
-            nn.Dropout(p=0.2),
+            nn.Dropout(p=0.3),
             ResBlock(out_channels, out_channels),                             # 64 x 128 x 128 -> 64 x 128 x 128
             ConvBatchNormReluBlock(out_channels, out_channels, padding=65)        # 64 x 128 x 128 -> 64 x 256 x 256
         )
         self.decoder_layer1 = torch.nn.Sequential(
             ConvBatchNormReluBlock(out_channels * 2, 32),                    # 128 x 256 x 256 -> 32 x 256 x 256
-            nn.Dropout(p=0.2),
+            nn.Dropout(p=0.3),
             ResBlock(32, 32),                                                # 32 x 256 x 256 -> 32 x 256 x 256
             ConvBatchNormReluBlock(32, num_classes, kernel_size=1, padding=0)         # 32 x 256 x 256 -> num_classes x 256 x 256
         )
