@@ -89,31 +89,16 @@ if __name__ == "__main__":
         transforms.ToTensor()
     ])
     
-    r = []
-    g = []
-    b = []
-
-    for i in range(len(train_set)):
-        r.append(np.dstack(train_set[i][0][:, :, 0]))
-        g.append(np.dstack(train_set[i][0][:, :, 1]))
-        b.append(np.dstack(train_set[i][0][:, :, 2]))
-
-    mean = (np.mean(r), np.mean(g), np.mean(b))
-    std = (np.std(r), np.std(g), np.std(b))
-
-    train_transform = transforms.Compose([
-        *data_augment_transforms
-        transforms.ToTensor(),
-        transforms.Normalize(mean, std),
-    ])
-
     base_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(mean, std)
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
-    train_set.transform = train_transform
-    test_set.transform = base_transform
+    train_transform = transforms.Compose([
+        *data_augment_transforms,
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
 
     if args.dataset == 'cifar10':
         # Download the train and test set and apply transform on it
