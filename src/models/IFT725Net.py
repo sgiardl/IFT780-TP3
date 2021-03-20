@@ -57,15 +57,12 @@ class IFT725Net(CNNBaseModel):
                                    DenseBlock(in_channels=96+64, growth_rate=32),   # 96+64*16*16---> (96*2)+64*16*16
                                    DenseBlock(in_channels=96*2+64, growth_rate=32),   # (96*2)+64*16*16---> (96*3)+64*16*16
                                    
-                                   nn.Dropout(p=0.2),
                                    BottleneckBlock(in_channels=96*3+64, out_channels=96*3+64, stride=2),   # (96*3)+64*16*16 ---> (96*3)+64*8*8
                                    
                                    ResBlock(in_channels=96*3+64, out_channels=256),   # (96*3)+64*8*8 ---> 256*8*8
                                    ResBlock(in_channels=256, out_channels=128),   # 256*8*8 ---> 128*8*8
                                    ResBlock(in_channels=128, out_channels=64),   # 128*8*8 ---> 64*8*8
-            
-                                   nn.Dropout(p=0.2),
-            
+
                                    CNNBaseBlock(in_channels=64, out_channels=64, stride=2),   # 64*8*8 ---> 64*4*4
                                    CNNBaseBlock(in_channels=64, out_channels=32),   # 64*4*4 ---> 32*4*4
                                    CNNBaseBlock(in_channels=32, out_channels=16),   # 32*4*4 ---> 16*4*4
